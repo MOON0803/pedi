@@ -1,0 +1,862 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0E2C27">
+<meta name="robots" content="noindex, nofollow">
+<title>PediDent 부스 장부</title>
+<style>
+:root{
+  --pine:#0E2C27; --bg:#E9EFEA; --paper:#fff; --teal:#0C7C68; --teal-soft:#D7EBE4;
+  --marigold:#B77B0B; --marigold-soft:#FBEBC8; --berry:#B0325A; --berry-soft:#F7DFE6;
+  --slate:#647F79; --line:#D2DED8;
+}
+*{box-sizing:border-box}
+html,body{margin:0; padding:0}
+body{
+  font-family:"Pretendard","Pretendard Variable",-apple-system,"Apple SD Gothic Neo","Noto Sans KR","Malgun Gothic",sans-serif;
+  color:var(--pine); background:var(--bg); font-size:15px; line-height:1.5;
+  -webkit-tap-highlight-color:transparent; -webkit-text-size-adjust:100%;
+}
+#app{display:flex; flex-direction:column; min-height:100vh; min-height:100dvh}
+button{font:inherit; color:inherit; cursor:pointer; border:none; background:none; padding:0}
+input,textarea{
+  font:inherit; color:inherit; width:100%; background:var(--paper);
+  border:1px solid var(--line); border-radius:9px; padding:10px 11px; outline:none;
+}
+textarea{resize:vertical}
+input:focus,textarea:focus,button:focus-visible{outline:2px solid var(--teal); outline-offset:1px}
+
+.top{position:sticky; top:0; z-index:20; display:flex; align-items:center; justify-content:space-between;
+  gap:12px; padding:11px 16px; padding-top:calc(11px + env(safe-area-inset-top)); background:var(--pine); color:#EAF3EF}
+.top-left{display:flex; flex-direction:column; min-width:0}
+.brand{font-weight:700; letter-spacing:-.01em}
+.place{font-size:11px; color:#8FB0A7; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.top-right{text-align:right; flex:none}
+.top-num{display:block; font-size:19px; font-weight:700; font-variant-numeric:tabular-nums}
+.top-sub{font-size:11px; color:#8FB0A7}
+.top-sub .warn{color:#F3B0B0}
+.top-sub .ok{color:#7FD2B8}
+
+main{flex:1}
+.pad{padding:14px 14px 24px; display:flex; flex-direction:column; gap:10px}
+.hint{margin:0 2px 2px; font-size:12.5px; color:var(--slate)}
+h3.sec{margin:16px 2px 2px; font-size:13px; font-weight:700; color:var(--slate)}
+.note{margin:2px 2px 0; font-size:12px; color:var(--slate); line-height:1.6}
+
+.prod{position:relative; display:flex; align-items:stretch; gap:8px; overflow:hidden;
+  background:var(--paper); border:1px solid var(--line); border-radius:13px}
+.prod.active{border-color:var(--teal); box-shadow:inset 0 0 0 1px var(--teal)}
+.level{position:absolute; top:0; bottom:0; left:0; background:var(--teal-soft); opacity:.55}
+.prod-main{position:relative; flex:1; text-align:left; padding:13px 4px 13px 14px}
+.prod-head{display:flex; align-items:center; gap:7px; flex-wrap:wrap}
+.prod-name{font-weight:650; letter-spacing:-.01em}
+.prod-sub{font-size:12px; color:var(--slate); margin-top:1px}
+.prod-price{display:flex; align-items:baseline; flex-wrap:wrap; gap:8px; margin-top:6px; font-size:13px}
+.prod-price b{font-size:15px; font-variant-numeric:tabular-nums}
+.prod-price s{color:var(--slate); font-size:12px}
+.left{color:var(--teal); font-size:12px; font-weight:600}
+.left.low{color:var(--berry)}
+.step{position:relative; display:flex; flex-direction:column; align-items:center; justify-content:center;
+  gap:2px; padding:6px 8px; border-left:1px solid var(--line); background:rgba(255,255,255,.85)}
+.step button{width:40px; height:36px; font-size:20px; line-height:1; border-radius:8px; background:var(--bg)}
+.step button:disabled{opacity:.35; cursor:default}
+.step .q{font-size:14px; font-weight:700; font-variant-numeric:tabular-nums}
+
+.chip{font-size:11px; font-weight:600; padding:3px 7px; border-radius:6px; background:var(--teal-soft); color:#08594B}
+.chip.voucher{background:var(--marigold-soft); color:var(--marigold)}
+.chip.berry{background:var(--berry-soft); color:var(--berry)}
+.chip.ghost{background:var(--bg); color:var(--slate)}
+
+.cartbar{position:sticky; bottom:calc(54px + env(safe-area-inset-bottom)); z-index:15; display:flex; align-items:center; gap:10px;
+  margin:0 12px 8px; padding:9px 10px 9px 14px; border-radius:14px;
+  background:var(--pine); color:#EAF3EF; box-shadow:0 6px 18px rgba(14,44,39,.28)}
+.cart-info{flex:1; display:flex; flex-direction:column; line-height:1.25}
+.cart-qty{font-size:11px; color:#8FB0A7}
+.cart-total{font-size:17px; font-weight:700; font-variant-numeric:tabular-nums}
+.cart-clear{font-size:12px; color:#8FB0A7; padding:6px}
+.cart-go{background:#25D3A6; color:#06342B; font-weight:700; padding:11px 16px; border-radius:10px}
+
+nav{position:sticky; bottom:0; z-index:20; display:grid; grid-template-columns:repeat(5,1fr);
+  background:var(--paper); border-top:1px solid var(--line); padding-bottom:env(safe-area-inset-bottom)}
+nav button{position:relative; padding:13px 0 15px; font-size:12.5px; color:var(--slate)}
+nav button.on{color:var(--pine); font-weight:700; box-shadow:inset 0 2px 0 var(--teal)}
+.dot{position:absolute; top:6px; left:50%; margin-left:12px; min-width:16px; height:16px;
+  border-radius:8px; background:var(--berry); color:#fff; font-size:10px; font-weight:700;
+  display:inline-flex; align-items:center; justify-content:center; padding:0 4px}
+
+.scrim{position:fixed; inset:0; z-index:40; background:rgba(14,44,39,.42); display:flex; align-items:flex-end; justify-content:center}
+.sheet{width:100%; max-width:520px; max-height:92vh; display:flex; flex-direction:column;
+  background:var(--bg); border-radius:18px 18px 0 0; overflow:hidden}
+.sheet-head{display:flex; align-items:center; justify-content:space-between; padding:14px 16px 10px; background:var(--paper); border-bottom:1px solid var(--line)}
+.sheet-head h2{margin:0; font-size:16px}
+.x{font-size:16px; color:var(--slate); padding:4px 8px}
+.sheet-body{flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; padding:14px 16px 18px; display:flex; flex-direction:column; gap:13px}
+.sheet-foot{display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px 16px;
+  padding-bottom:calc(12px + env(safe-area-inset-bottom)); background:var(--paper); border-top:1px solid var(--line)}
+.foot-label{display:block; font-size:11px; color:var(--slate)}
+.foot-total{font-size:19px; font-weight:700; font-variant-numeric:tabular-nums}
+
+.lines{background:var(--paper); border:1px solid var(--line); border-radius:11px; padding:4px 12px}
+.line{display:flex; justify-content:space-between; gap:10px; padding:8px 0; font-size:14px; border-bottom:1px solid var(--line)}
+.line:last-child{border-bottom:none}
+.line em{font-style:normal; color:var(--slate)}
+.line span:last-child{font-variant-numeric:tabular-nums}
+
+.field{display:flex; flex-direction:column; gap:5px; min-width:0}
+.field>.lab{font-size:12px; color:var(--slate)}
+.row2{display:grid; grid-template-columns:1fr 1fr; gap:10px}
+.row3{display:grid; grid-template-columns:repeat(3,1fr); gap:8px}
+.ship-box{background:var(--berry-soft); border-radius:12px; padding:12px; display:flex; flex-direction:column; gap:11px}
+
+.seg{display:flex; gap:6px; flex-wrap:wrap}
+.seg button{flex:1; min-width:64px; padding:11px 6px; border-radius:9px; background:var(--paper); border:1px solid var(--line); font-size:14px}
+.seg.small button{padding:9px 4px; font-size:13px; min-width:52px}
+.seg.wide button{min-width:0}
+.seg button.on{background:var(--pine); color:#EAF3EF; border-color:var(--pine); font-weight:600}
+
+.toggle{display:flex; align-items:center; gap:9px; padding:11px 13px; border-radius:10px; background:var(--paper); border:1px solid var(--line); width:100%; text-align:left; font-size:14px}
+.toggle.on{border-color:var(--teal); background:var(--teal-soft)}
+.toggle.on.voucher{border-color:var(--marigold); background:var(--marigold-soft)}
+.box{width:20px; height:20px; flex:none; border-radius:6px; border:1.5px solid var(--slate); background:var(--paper); display:inline-flex; align-items:center; justify-content:center; font-size:12px; font-weight:700}
+.toggle.on .box{border-color:var(--teal); color:var(--teal)}
+.toggle.on.voucher .box{border-color:var(--marigold); color:var(--marigold)}
+
+.primary{background:var(--teal); color:#fff; font-weight:700; padding:13px 20px; border-radius:11px}
+.primary.small{padding:10px 14px; font-size:13px; flex:none}
+.block{display:block; width:100%; margin-top:6px}
+.ghost{background:var(--paper); border:1px solid var(--line); padding:12px 18px; border-radius:11px}
+.danger{color:var(--berry); font-weight:600}
+.danger.block{background:var(--berry-soft); border:1px solid var(--berry); padding:12px; border-radius:11px}
+
+.sale{background:var(--paper); border:1px solid var(--line); border-radius:13px; padding:12px 13px; display:flex; flex-direction:column; gap:7px}
+.sale-top{display:flex; justify-content:space-between; align-items:baseline}
+.time{font-size:12px; color:var(--slate); font-variant-numeric:tabular-nums}
+.sale-total{font-size:16px; font-weight:700; font-variant-numeric:tabular-nums}
+.sale-items{font-size:13.5px}
+.tags{display:flex; flex-wrap:wrap; gap:5px}
+.memo{font-size:12.5px; color:var(--slate); background:var(--bg); border-radius:8px; padding:7px 9px}
+.sale-act{display:flex; gap:14px; padding-top:3px; font-size:13px; color:var(--slate)}
+
+.shipcard{background:var(--paper); border:1px solid var(--line); border-left:3px solid var(--berry); border-radius:12px; padding:12px 13px; display:flex; flex-direction:column; gap:8px}
+.shipcard.done{border-left-color:var(--teal); opacity:.72}
+.shipcard-top{display:flex; justify-content:space-between; gap:10px; font-size:14px}
+.shipcard-top span{color:var(--slate); font-variant-numeric:tabular-nums}
+.addr{font-size:13.5px; background:var(--bg); border-radius:9px; padding:9px 10px; cursor:pointer; line-height:1.55; text-align:left; width:100%; white-space:pre-wrap}
+.shipcard-items{font-size:12.5px; color:var(--slate)}
+.shipcard-act{display:flex; gap:8px; align-items:center}
+
+.big{background:var(--pine); color:#EAF3EF; border-radius:15px; padding:18px 16px; display:flex; flex-direction:column; gap:3px}
+.big-label{font-size:12px; color:#8FB0A7}
+.big-num{font-size:31px; font-weight:700; letter-spacing:-.02em; font-variant-numeric:tabular-nums}
+.big-sub{font-size:12.5px; color:#8FB0A7}
+.table{background:var(--paper); border:1px solid var(--line); border-radius:12px; padding:2px 13px}
+.tr{display:flex; justify-content:space-between; gap:12px; padding:11px 0; border-bottom:1px solid var(--line); font-size:14px}
+.tr:last-child{border-bottom:none}
+.tr.empty{color:var(--slate); justify-content:center}
+.num{font-variant-numeric:tabular-nums; font-weight:600}
+.num em{font-style:normal; font-weight:400; color:var(--slate)}
+
+.editcard{background:var(--paper); border:1px solid var(--line); border-radius:13px; padding:12px 13px; display:flex; flex-direction:column; gap:10px}
+.editname{font-weight:650; border-color:transparent; background:var(--bg)}
+.export{font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:11.5px; white-space:pre; line-height:1.7}
+
+.empty{padding:56px 24px; text-align:center; display:flex; flex-direction:column; gap:6px; color:var(--slate)}
+.empty b{color:var(--pine); font-size:15px}
+
+.gate{min-height:100vh; min-height:100dvh; display:flex; align-items:center; justify-content:center; padding:24px}
+.gate-card{width:100%; max-width:320px; display:flex; flex-direction:column; gap:12px; text-align:center}
+.gate-card h1{margin:0; font-size:20px}
+.gate-card p{margin:0; font-size:13px; color:var(--slate)}
+
+.toast{position:fixed; left:50%; bottom:80px; transform:translateX(-50%); z-index:50;
+  background:var(--pine); color:#EAF3EF; padding:11px 17px; border-radius:11px; font-size:13.5px;
+  box-shadow:0 6px 18px rgba(14,44,39,.3); max-width:88%; text-align:center}
+
+@media (min-width:600px){
+  .pad{max-width:560px; margin:0 auto}
+  .cartbar{max-width:560px; margin:0 auto 8px}
+}
+@media print{ .top,nav,.cartbar,.sale-act,.toast{display:none!important} body{background:#fff} }
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<script>
+/* ================= 기본값 ================= */
+var LOCAL_KEY = 'pedident-local-v2';
+var PIN_KEY = 'pedident-pin';
+var PAYS = ['카드','현금','계좌이체','기타'];
+var API_PATHS = ['/api/ledger','/.netlify/functions/api'];
+
+var DEFAULT_PRODUCTS = [
+  {id:'p1', name:'Kids Files PREMIUM', sub:'Assorted 15mm / 17mm', list:44000, price:20000, bundleQty:null, bundlePrice:null, stock:60, voucherOnly:true},
+  {id:'p2', name:'러버댐', sub:'Rubber dam / Dental dam', list:7000, price:7000, bundleQty:2, bundlePrice:10000, stock:120, voucherOnly:true},
+  {id:'p3', name:'멀티케이스', sub:'', list:15000, price:10000, bundleQty:null, bundlePrice:null, stock:40, voucherOnly:true}
+];
+
+var S = {
+  tab:'sell',
+  products: DEFAULT_PRODUCTS.map(function(p){return Object.assign({},p)}),
+  configUpdatedAt: 0,
+  configDirty: false,
+  sales: [], staff:['','',''], activeStaff:'',
+  cart:{}, draft:null, exportOpen:false, filter:'all',
+  confirmId:null, confirmReset:false, toast:null,
+  pin: '', needPin:false, gateMsg:'',
+  online:null, syncing:false, lastSync:0, booted:false
+};
+
+/* ================= 유틸 ================= */
+function won(n){ return (n||0).toLocaleString('ko-KR') + '원' }
+function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7) }
+function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g, function(c){
+  return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c] }) }
+function amountFor(p, qty){
+  if(!qty) return 0;
+  if(p.bundleQty && p.bundlePrice){
+    var sets = Math.floor(qty/p.bundleQty), rest = qty % p.bundleQty;
+    return sets*p.bundlePrice + rest*p.price;
+  }
+  return qty*p.price;
+}
+function priceLabel(p){
+  if(p.bundleQty && p.bundlePrice)
+    return p.bundleQty+'개 '+p.bundlePrice.toLocaleString('ko-KR')+'원 · 낱개 '+p.price.toLocaleString('ko-KR')+'원';
+  return won(p.price);
+}
+function productById(id){ for(var i=0;i<S.products.length;i++) if(S.products[i].id===id) return S.products[i]; return null }
+function saleById(id){ for(var i=0;i<S.sales.length;i++) if(S.sales[i].id===id) return S.sales[i]; return null }
+function liveSales(){ return S.sales.filter(function(s){ return !s.deleted }) }
+function hhmm(t){ return new Date(t).toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'}) }
+function pendingCount(){ return S.sales.filter(function(s){return s._dirty}).length + (S.configDirty?1:0) }
+
+/* ================= 로컬 저장 ================= */
+var hasLS = (function(){ try{ localStorage.setItem('__t','1'); localStorage.removeItem('__t'); return true }catch(e){ return false } })();
+function localSnapshot(){
+  return {products:S.products, configUpdatedAt:S.configUpdatedAt, configDirty:S.configDirty,
+    sales:S.sales, staff:S.staff, activeStaff:S.activeStaff};
+}
+function saveLocal(){
+  if(!hasLS) return;
+  try{ localStorage.setItem(LOCAL_KEY, JSON.stringify(localSnapshot())) }catch(e){}
+}
+function loadLocal(){
+  if(!hasLS) return;
+  try{
+    var d = JSON.parse(localStorage.getItem(LOCAL_KEY)||'null');
+    if(!d) return;
+    if(d.products && d.products.length) S.products = d.products;
+    if(d.sales) S.sales = d.sales;
+    if(d.staff) S.staff = d.staff;
+    if(typeof d.activeStaff==='string') S.activeStaff = d.activeStaff;
+    S.configUpdatedAt = d.configUpdatedAt || 0;
+    S.configDirty = !!d.configDirty;
+  }catch(e){}
+}
+
+/* ================= 서버 통신 ================= */
+var apiPath = null;
+function api(method, body){
+  var paths = apiPath ? [apiPath] : API_PATHS.slice();
+  var i = 0;
+  function attempt(){
+    if(i >= paths.length) return Promise.reject(new Error('연결 실패'));
+    var p = paths[i++];
+    return fetch(p, {
+      method: method,
+      headers: {'content-type':'application/json','x-booth-pin': S.pin || ''},
+      body: method==='POST' ? JSON.stringify(body) : undefined
+    }).then(function(res){
+      if(res.status===401){ var e=new Error('pin'); e.pin=true; throw e }
+      if(!res.ok) throw new Error('http '+res.status);
+      apiPath = p;
+      return res.json();
+    }).catch(function(err){
+      if(err.pin) throw err;
+      if(i < paths.length) return attempt();
+      throw err;
+    });
+  }
+  return attempt();
+}
+
+function stripSale(s){
+  var c = Object.assign({}, s);
+  delete c._dirty;
+  return c;
+}
+function applyRemote(remote){
+  if(!remote) return;
+  var map = {};
+  S.sales.forEach(function(s){ map[s.id]=s });
+  (remote.sales||[]).forEach(function(rs){
+    var prev = map[rs.id];
+    if(!prev){ map[rs.id]=rs; return }
+    if(prev._dirty) return;                       // 아직 못 보낸 내 수정이 우선
+    if((rs.updatedAt||0) >= (prev.updatedAt||0)) map[rs.id]=rs;
+  });
+  S.sales = Object.keys(map).map(function(k){return map[k]})
+    .sort(function(a,b){ return (b.createdAt||0)-(a.createdAt||0) });
+
+  if(remote.config && !S.configDirty && (remote.config.updatedAt||0) > S.configUpdatedAt){
+    if(remote.config.products && remote.config.products.length) S.products = remote.config.products;
+    if(remote.config.staff) S.staff = remote.config.staff;
+    S.configUpdatedAt = remote.config.updatedAt;
+  }
+}
+
+var syncTimer = null;
+function scheduleSync(){
+  clearTimeout(syncTimer);
+  syncTimer = setTimeout(function(){ sync() }, 500);
+}
+function sync(){
+  if(S.syncing || S.needPin) return Promise.resolve();
+  S.syncing = true; renderIfIdle();
+  var dirty = S.sales.filter(function(s){return s._dirty});
+  var payload = {
+    sales: dirty.map(stripSale),
+    config: S.configDirty ? {products:S.products, staff:S.staff, updatedAt:S.configUpdatedAt} : null
+  };
+  return api('POST', payload).then(function(remote){
+    dirty.forEach(function(d){ var x = saleById(d.id); if(x && x.updatedAt===d.updatedAt) delete x._dirty });
+    S.configDirty = false;
+    applyRemote(remote);
+    S.online = true; S.lastSync = Date.now();
+  }).catch(function(err){
+    if(err.pin){ S.needPin = true; S.gateMsg = '접속 코드가 맞지 않습니다.' }
+    S.online = false;
+  }).then(function(){
+    S.syncing = false; saveLocal(); renderIfIdle();
+  });
+}
+
+/* ================= 파생값 ================= */
+function soldMap(){
+  var m={};
+  liveSales().forEach(function(s){ s.items.forEach(function(it){ m[it.id]=(m[it.id]||0)+it.qty }) });
+  return m;
+}
+function cartLines(){
+  return S.products.filter(function(p){ return S.cart[p.id]>0 })
+    .map(function(p){ return {p:p, qty:S.cart[p.id], amount:amountFor(p,S.cart[p.id])} });
+}
+function totals(){
+  var t={revenue:0,qty:0,ship:0,pending:0,byPay:{},count:0};
+  liveSales().forEach(function(s){
+    t.count++; t.revenue+=s.total;
+    s.items.forEach(function(it){ t.qty+=it.qty });
+    t.byPay[s.pay]=(t.byPay[s.pay]||0)+s.total;
+    if(s.delivery){ t.ship++; if(!s.shipped) t.pending++ }
+  });
+  return t;
+}
+function draftTotal(d){ return d.subtotal + (d.delivery ? d.shipFee : 0) + d.adjust }
+function touchConfig(){ S.configUpdatedAt = Date.now(); S.configDirty = true; saveLocal(); scheduleSync() }
+function touchSale(s){ s.updatedAt = Date.now(); s._dirty = true; saveLocal(); scheduleSync() }
+
+/* ================= 화면 ================= */
+function renderIfIdle(){
+  var a = document.activeElement;
+  if(a && (a.tagName==='INPUT' || a.tagName==='TEXTAREA')) return;
+  render();
+}
+function statusHtml(){
+  if(S.syncing) return '동기화 중';
+  var p = pendingCount();
+  if(S.online === false) return '<span class="warn">오프라인'+(p?' · '+p+'건 대기':'')+'</span>';
+  if(S.online === true) return '<span class="ok">공유 중</span>'+(S.lastSync?' '+hhmm(S.lastSync):'');
+  return '연결 확인 중';
+}
+
+function render(){
+  if(S.needPin){ renderGate(); return }
+  var t = totals();
+  var lines = cartLines();
+  var cartQty = lines.reduce(function(a,b){return a+b.qty},0);
+  var cartSum = lines.reduce(function(a,b){return a+b.amount},0);
+
+  var body = '';
+  if(S.tab==='sell') body = viewSell();
+  else if(S.tab==='list') body = viewList();
+  else if(S.tab==='ship') body = viewShip();
+  else if(S.tab==='sum') body = viewSum(t);
+  else body = viewSet();
+
+  document.getElementById('app').innerHTML =
+  '<header class="top">'+
+    '<div class="top-left"><span class="brand">PediDent</span>'+
+    '<span class="place">벡스코 제2전시장 321–326</span></div>'+
+    '<div class="top-right"><span class="top-num">'+won(t.revenue)+'</span>'+
+    '<span class="top-sub">'+t.count+'건 · '+statusHtml()+'</span></div>'+
+  '</header>'+
+  '<main>'+body+'</main>'+
+  (S.tab==='sell' && cartQty>0 ?
+    '<div class="cartbar">'+
+      '<button class="cart-clear" data-a="clearcart">비우기</button>'+
+      '<div class="cart-info"><span class="cart-qty">'+cartQty+'개</span>'+
+      '<span class="cart-total">'+won(cartSum)+'</span></div>'+
+      '<button class="cart-go" data-a="checkout">결제 등록</button>'+
+    '</div>' : '')+
+  '<nav>'+
+    [['sell','판매'],['list','내역'],['ship','배송'],['sum','정산'],['set','설정']].map(function(x){
+      return '<button data-a="tab" data-v="'+x[0]+'" class="'+(S.tab===x[0]?'on':'')+'">'+x[1]+
+        (x[0]==='ship'&&t.pending>0 ? '<span class="dot">'+t.pending+'</span>':'')+'</button>';
+    }).join('')+
+  '</nav>'+
+  (S.draft ? viewSheet(S.draft) : '')+
+  (S.exportOpen ? viewExport() : '')+
+  (S.toast ? '<div class="toast">'+esc(S.toast)+'</div>' : '');
+}
+
+function renderGate(){
+  document.getElementById('app').innerHTML =
+  '<div class="gate"><div class="gate-card">'+
+  '<h1>PediDent 부스 장부</h1>'+
+  '<p>부스 담당자에게 받은 접속 코드를 입력하세요.</p>'+
+  '<input id="pinInput" type="password" inputmode="numeric" placeholder="접속 코드" value="'+esc(S.pin)+'">'+
+  '<button class="primary" data-a="pinok">들어가기</button>'+
+  (S.gateMsg?'<p class="note">'+esc(S.gateMsg)+'</p>':'')+
+  '</div></div>';
+  var el = document.getElementById('pinInput');
+  if(el) el.focus();
+}
+
+/* ---- 판매 ---- */
+function viewSell(){
+  var sm = soldMap();
+  return '<div class="pad"><p class="hint">품목을 눌러 담고, 아래에서 결제 정보를 입력하세요.</p>'+
+  S.products.map(function(p){
+    var sold = sm[p.id]||0;
+    var left = (p.stock==null) ? null : p.stock - sold;
+    var pct = p.stock ? Math.max(0,Math.min(100,(left/p.stock)*100)) : 0;
+    var q = S.cart[p.id]||0;
+    return '<div class="prod'+(q?' active':'')+'">'+
+      (p.stock!=null ? '<div class="level" style="width:'+pct+'%"></div>' : '')+
+      '<button class="prod-main" data-a="add" data-v="'+p.id+'">'+
+        '<span class="prod-head"><span class="prod-name">'+esc(p.name)+'</span>'+
+        (p.voucherOnly?'<span class="chip voucher">상품권</span>':'')+'</span>'+
+        (p.sub?'<div class="prod-sub">'+esc(p.sub)+'</div>':'')+
+        '<div class="prod-price"><b>'+priceLabel(p)+'</b><s>'+won(p.list)+'</s>'+
+        (left!=null?'<span class="left'+(left<=5?' low':'')+'">'+(left<=0?'재고 소진':'남은 '+left+'개')+'</span>':'')+
+        '</div>'+
+      '</button>'+
+      '<div class="step">'+
+        '<button data-a="sub" data-v="'+p.id+'"'+(q?'':' disabled')+' aria-label="빼기">−</button>'+
+        '<span class="q">'+q+'</span>'+
+        '<button data-a="add" data-v="'+p.id+'" aria-label="더하기">+</button>'+
+      '</div></div>';
+  }).join('')+'</div>';
+}
+
+/* ---- 결제 시트 ---- */
+function field(label, inner){ return '<label class="field"><span class="lab">'+label+'</span>'+inner+'</label>' }
+function viewSheet(d){
+  var staffList = S.staff.filter(function(x){return x});
+  return '<div class="scrim" data-a="closesheet"><div class="sheet" data-stop="1">'+
+  '<div class="sheet-head"><h2>'+(d.isNew?'결제 등록':'판매 내역 수정')+'</h2>'+
+  '<button class="x" data-a="closesheet" aria-label="닫기">✕</button></div>'+
+  '<div class="sheet-body">'+
+    '<div class="lines">'+d.items.map(function(it){
+      return '<div class="line"><span>'+esc(it.name)+' <em>×'+it.qty+'</em></span><span>'+won(it.amount)+'</span></div>';
+    }).join('')+'</div>'+
+    field('결제 수단','<div class="seg">'+PAYS.map(function(m){
+      return '<button data-a="pay" data-v="'+m+'" class="'+(d.pay===m?'on':'')+'">'+m+'</button>';
+    }).join('')+'</div>')+
+    '<button class="toggle'+(d.voucher?' on voucher':'')+'" data-a="voucher">'+
+    '<span class="box">'+(d.voucher?'✓':'')+'</span>상품권 확인함</button>'+
+    field('수령 방법','<div class="seg">'+
+      '<button data-a="deliv" data-v="0" class="'+(!d.delivery?'on':'')+'">현장 수령</button>'+
+      '<button data-a="deliv" data-v="1" class="'+(d.delivery?'on':'')+'">배송</button></div>')+
+    (d.delivery ?
+      '<div class="ship-box">'+
+        '<div class="row2">'+
+          field('받는 분','<input data-i="draft" data-k="recipient" value="'+esc(d.recipient)+'" placeholder="이름">')+
+          field('연락처','<input data-i="draft" data-k="phone" inputmode="tel" value="'+esc(d.phone)+'" placeholder="010-0000-0000">')+
+        '</div>'+
+        field('주소','<textarea rows="2" data-i="draft" data-k="address" placeholder="우편번호 포함 전체 주소">'+esc(d.address)+'</textarea>')+
+        field('배송비','<div class="seg small">'+[0,3000,4000].map(function(v){
+          return '<button data-a="fee" data-v="'+v+'" class="'+(d.shipFee===v?'on':'')+'">'+(v===0?'무료':v.toLocaleString('ko-KR')+'원')+'</button>';
+        }).join('')+'</div>')+
+      '</div>' : '')+
+    '<div class="row2">'+
+      field('금액 조정','<input type="number" data-i="draft" data-k="adjust" data-num="1" value="'+d.adjust+'" placeholder="할인은 -1000">')+
+      field('담당자', staffList.length ?
+        '<div class="seg small">'+staffList.map(function(s){
+          return '<button data-a="staffpick" data-v="'+esc(s)+'" class="'+(d.staff===s?'on':'')+'">'+esc(s)+'</button>';
+        }).join('')+'</div>'
+        : '<input data-i="draft" data-k="staff" value="'+esc(d.staff)+'" placeholder="이름">')+
+    '</div>'+
+    field('메모','<input data-i="draft" data-k="memo" value="'+esc(d.memo)+'" placeholder="추가 요청, 명함 수령 등">')+
+  '</div>'+
+  '<div class="sheet-foot"><div><span class="foot-label">받을 금액</span>'+
+  '<span class="foot-total" id="footTotal">'+won(draftTotal(d))+'</span></div>'+
+  '<button class="primary" data-a="savesale">'+(d.isNew?'판매 확정':'수정 저장')+'</button></div>'+
+  '</div></div>';
+}
+
+/* ---- 내역 ---- */
+function viewList(){
+  var all = liveSales();
+  if(!all.length) return emptyView('아직 판매 기록이 없습니다','판매 탭에서 첫 건을 등록해 보세요.');
+  var rows = all.filter(function(s){
+    return S.filter==='all' ? true : (S.filter==='ship' ? s.delivery : !s.delivery);
+  });
+  return '<div class="pad">'+
+  '<div class="seg wide">'+[['all','전체'],['pick','현장 수령'],['ship','배송']].map(function(x){
+    return '<button data-a="filter" data-v="'+x[0]+'" class="'+(S.filter===x[0]?'on':'')+'">'+x[1]+'</button>';
+  }).join('')+'</div>'+
+  (rows.length ? rows.map(function(s){
+    return '<div class="sale">'+
+      '<div class="sale-top"><span class="time">'+hhmm(s.createdAt)+(s._dirty?' · 대기':'')+'</span>'+
+      '<span class="sale-total">'+won(s.total)+'</span></div>'+
+      '<div class="sale-items">'+esc(s.items.map(function(i){return i.name+' ×'+i.qty}).join(' · '))+'</div>'+
+      '<div class="tags"><span class="chip">'+esc(s.pay)+'</span>'+
+      (s.voucher?'<span class="chip voucher">상품권</span>':'')+
+      (s.delivery?'<span class="chip '+(s.shipped?'':'berry')+'">'+(s.shipped?'발송 완료':'배송 대기')+'</span>':'')+
+      (s.staff?'<span class="chip ghost">'+esc(s.staff)+'</span>':'')+'</div>'+
+      (s.memo?'<div class="memo">'+esc(s.memo)+'</div>':'')+
+      '<div class="sale-act"><button data-a="editsale" data-v="'+s.id+'">수정</button>'+
+      (S.confirmId===s.id
+        ? '<button class="danger" data-a="delsale" data-v="'+s.id+'">삭제 확인</button><button data-a="canceldel">취소</button>'
+        : '<button data-a="askdel" data-v="'+s.id+'">삭제</button>')+
+      '</div></div>';
+  }).join('') : '<p class="hint">해당하는 기록이 없습니다.</p>')+
+  '</div>';
+}
+
+/* ---- 배송 ---- */
+function shipCard(s){
+  return '<div class="shipcard'+(s.shipped?' done':'')+'">'+
+    '<div class="shipcard-top"><b>'+esc(s.recipient||'이름 미입력')+'</b><span>'+esc(s.phone)+'</span></div>'+
+    '<button class="addr" data-a="copyaddr" data-v="'+s.id+'">'+esc(s.address||'주소 미입력')+'</button>'+
+    '<div class="shipcard-items">'+esc(s.items.map(function(i){return i.name+' '+i.qty+'개'}).join(' · '))+'</div>'+
+    '<div class="shipcard-act">'+
+      '<input data-i="track" data-id="'+s.id+'" value="'+esc(s.tracking||'')+'" placeholder="송장번호">'+
+      '<button class="'+(s.shipped?'ghost':'primary small')+'" data-a="shiptoggle" data-v="'+s.id+'">'+
+      (s.shipped?'되돌리기':'발송 완료')+'</button>'+
+    '</div></div>';
+}
+function viewShip(){
+  var rows = liveSales().filter(function(s){return s.delivery});
+  if(!rows.length) return emptyView('배송할 주문이 없습니다','결제 등록에서 수령 방법을 배송으로 고르면 여기에 모입니다.');
+  var pending = rows.filter(function(s){return !s.shipped});
+  var done = rows.filter(function(s){return s.shipped});
+  return '<div class="pad"><p class="hint">주소를 누르면 복사됩니다. 발송하면서 송장번호를 적어 두세요.</p>'+
+    (pending.length?'<h3 class="sec">보낼 것 '+pending.length+'건</h3>':'')+
+    pending.map(shipCard).join('')+
+    (done.length?'<h3 class="sec">발송 완료 '+done.length+'건</h3>':'')+
+    done.map(shipCard).join('')+'</div>';
+}
+
+/* ---- 정산 ---- */
+function viewSum(t){
+  var sm = soldMap();
+  var avg = t.count ? Math.round(t.revenue/t.count) : 0;
+  return '<div class="pad">'+
+  '<div class="big"><span class="big-label">총 매출</span>'+
+  '<span class="big-num">'+won(t.revenue)+'</span>'+
+  '<span class="big-sub">'+t.count+'건 · '+t.qty+'개 · 건당 평균 '+won(avg)+'</span></div>'+
+  '<h3 class="sec">결제 수단별</h3><div class="table">'+
+  (Object.keys(t.byPay).length ? PAYS.filter(function(m){return t.byPay[m]}).map(function(m){
+    return '<div class="tr"><span>'+m+'</span><span class="num">'+won(t.byPay[m])+'</span></div>';
+  }).join('') : '<div class="tr empty">기록 없음</div>')+
+  '</div><p class="note">현금 합계로 시재를 맞춰 보세요.</p>'+
+  '<h3 class="sec">품목별</h3><div class="table">'+
+  S.products.map(function(p){
+    var sold = sm[p.id]||0, left = (p.stock==null)?null:p.stock-sold;
+    return '<div class="tr"><span>'+esc(p.name)+'</span><span class="num">'+sold+'개'+
+      (left!=null?'<em> · 남은 '+left+'</em>':'')+'</span></div>';
+  }).join('')+'</div>'+
+  '<h3 class="sec">배송</h3><div class="table">'+
+  '<div class="tr"><span>배송 주문</span><span class="num">'+t.ship+'건</span></div>'+
+  '<div class="tr"><span>아직 못 보낸 건</span><span class="num">'+t.pending+'건</span></div></div>'+
+  '<button class="primary block" data-a="openexport">엑셀용 표 내보내기</button>'+
+  '</div>';
+}
+
+/* ---- 설정 ---- */
+function viewSet(){
+  return '<div class="pad">'+
+  '<h3 class="sec">동기화</h3>'+
+  '<div class="table"><div class="tr"><span>상태</span><span class="num">'+
+    (S.online===false?'오프라인':(S.online?'연결됨':'확인 중'))+'</span></div>'+
+  '<div class="tr"><span>아직 못 보낸 변경</span><span class="num">'+pendingCount()+'건</span></div>'+
+  '<div class="tr"><span>마지막 동기화</span><span class="num">'+(S.lastSync?hhmm(S.lastSync):'-')+'</span></div></div>'+
+  '<button class="ghost block" data-a="synknow">지금 동기화</button>'+
+  '<p class="note">세 사람이 각자 폰으로 입력해도 몇 초 안에 서로 합쳐집니다. 전시장 인터넷이 끊겨도 입력은 계속 되고, 연결되면 자동으로 올라갑니다.</p>'+
+
+  '<h3 class="sec">품목</h3>'+
+  S.products.map(function(p){
+    return '<div class="editcard">'+
+      '<input class="editname" data-i="prod" data-id="'+p.id+'" data-k="name" value="'+esc(p.name)+'">'+
+      '<div class="row3">'+
+        field('정상가','<input type="number" data-i="prod" data-id="'+p.id+'" data-k="list" data-num="1" value="'+p.list+'">')+
+        field('행사가(낱개)','<input type="number" data-i="prod" data-id="'+p.id+'" data-k="price" data-num="1" value="'+p.price+'">')+
+        field('준비 수량','<input type="number" data-i="prod" data-id="'+p.id+'" data-k="stock" data-num="1" data-null="1" value="'+(p.stock==null?'':p.stock)+'" placeholder="미관리">')+
+      '</div>'+
+      '<div class="row2">'+
+        field('묶음 수량','<input type="number" data-i="prod" data-id="'+p.id+'" data-k="bundleQty" data-num="1" data-null="1" value="'+(p.bundleQty==null?'':p.bundleQty)+'" placeholder="예: 2">')+
+        field('묶음 가격','<input type="number" data-i="prod" data-id="'+p.id+'" data-k="bundlePrice" data-num="1" data-null="1" value="'+(p.bundlePrice==null?'':p.bundlePrice)+'" placeholder="예: 10000">')+
+      '</div>'+
+      '<button class="toggle'+(p.voucherOnly?' on voucher':'')+'" data-a="prodvoucher" data-v="'+p.id+'">'+
+      '<span class="box">'+(p.voucherOnly?'✓':'')+'</span>상품권 고객 전용</button>'+
+      '<button class="danger" data-a="delprod" data-v="'+p.id+'" style="font-size:13px;text-align:left">이 품목 삭제</button>'+
+    '</div>';
+  }).join('')+
+  '<button class="ghost block" data-a="addprod">품목 추가</button>'+
+  '<p class="note">품목과 가격은 세 기기에 함께 반영됩니다. 행사 전에 한 사람이 정리해 두세요.</p>'+
+
+  '<h3 class="sec">담당자</h3><div class="row3">'+
+  S.staff.map(function(s,i){
+    return '<input data-i="staff" data-k="'+i+'" value="'+esc(s)+'" placeholder="부스 '+(i+1)+'">';
+  }).join('')+'</div>'+
+
+  '<h3 class="sec">백업</h3>'+
+  '<button class="ghost block" data-a="backup">백업 파일 저장</button>'+
+  '<p class="note">기록은 서버에 저장되지만, 정산이 끝나면 한 번 받아 두는 편이 안전합니다.</p>'+
+
+  '<h3 class="sec">기록 비우기</h3>'+
+  (S.confirmReset
+    ? '<div class="row2"><button class="danger block" data-a="doreset">'+liveSales().length+'건 모두 삭제</button>'+
+      '<button class="ghost block" data-a="cancelreset">취소</button></div>'
+    : '<button class="ghost block" data-a="askreset">판매 내역 전체 삭제</button>')+
+  '<p class="note">세 기기 모두에서 사라집니다. 되돌릴 수 없으니 행사 시작 전에만 쓰세요.</p>'+
+  '</div>';
+}
+
+function emptyView(title, desc){
+  return '<div class="empty"><b>'+title+'</b><span>'+desc+'</span></div>';
+}
+
+/* ---- 내보내기 ---- */
+function exportRows(){
+  var head = ['시각','품목','수량','금액','결제수단','상품권','수령','받는분','연락처','주소','송장번호','발송','담당자','메모'];
+  var body = liveSales().slice().sort(function(a,b){return a.createdAt-b.createdAt}).map(function(s){
+    return [
+      new Date(s.createdAt).toLocaleString('ko-KR'),
+      s.items.map(function(i){return i.name}).join(' + '),
+      s.items.reduce(function(a,b){return a+b.qty},0),
+      s.total, s.pay, s.voucher?'O':'',
+      s.delivery?'배송':'현장',
+      s.recipient||'', s.phone||'',
+      (s.address||'').replace(/\s*\n\s*/g,' '),
+      s.tracking||'',
+      s.delivery ? (s.shipped?'완료':'대기') : '',
+      s.staff||'', s.memo||''
+    ];
+  });
+  return [head].concat(body);
+}
+function viewExport(){
+  var text = exportRows().map(function(r){return r.join('\t')}).join('\n');
+  return '<div class="scrim" data-a="closeexport"><div class="sheet" data-stop="1">'+
+  '<div class="sheet-head"><h2>엑셀용 표</h2><button class="x" data-a="closeexport" aria-label="닫기">✕</button></div>'+
+  '<div class="sheet-body"><textarea id="exportBox" class="export" readonly rows="12">'+esc(text)+'</textarea>'+
+  '<p class="note" id="exportMsg">표를 복사해 엑셀에 붙여 넣거나, CSV 파일로 내려받으세요.</p></div>'+
+  '<div class="sheet-foot"><button class="ghost" data-a="dlcsv">CSV 파일로 저장</button>'+
+  '<button class="primary" data-a="copyexport">표 복사</button></div></div></div>';
+}
+
+/* ================= 동작 ================= */
+function toast(msg){
+  S.toast = msg; render();
+  setTimeout(function(){ if(S.toast===msg){ S.toast=null; renderIfIdle() } }, 2200);
+}
+function bump(id, d){
+  var n = Math.max(0, (S.cart[id]||0) + d);
+  if(n===0) delete S.cart[id]; else S.cart[id]=n;
+  render();
+}
+function openCheckout(){
+  var lines = cartLines();
+  if(!lines.length) return;
+  S.draft = {
+    id: uid(),
+    items: lines.map(function(l){ return {id:l.p.id, name:l.p.name, qty:l.qty, amount:l.amount} }),
+    subtotal: lines.reduce(function(a,b){return a+b.amount},0),
+    adjust:0, pay:'카드',
+    voucher: lines.some(function(l){ return l.p.voucherOnly }),
+    delivery:false, recipient:'', phone:'', address:'', shipFee:0,
+    memo:'', staff:S.activeStaff, shipped:false, tracking:'', isNew:true
+  };
+  render();
+}
+function commitSale(){
+  var d = S.draft;
+  var isNew = d.isNew;
+  var rec = Object.assign({}, d, {total: draftTotal(d), createdAt: d.createdAt || Date.now()});
+  delete rec.isNew;
+  S.sales = [rec].concat(S.sales.filter(function(s){return s.id!==rec.id}))
+    .sort(function(a,b){return (b.createdAt||0)-(a.createdAt||0)});
+  if(d.staff) S.activeStaff = d.staff;
+  touchSale(rec);
+  S.draft = null; S.cart = {};
+  toast(isNew ? '판매 등록 ' + won(rec.total) : '판매 내역 수정됨');
+}
+function copyText(text, okMsg){
+  var done = function(){ toast(okMsg) };
+  var fail = function(){ toast('복사가 막혀 있습니다. 길게 눌러 직접 선택하세요') };
+  function fallback(){
+    try{
+      var ta = document.createElement('textarea');
+      ta.value = text; ta.style.position='fixed'; ta.style.opacity='0';
+      document.body.appendChild(ta); ta.select();
+      var ok = document.execCommand('copy');
+      document.body.removeChild(ta);
+      ok ? done() : fail();
+    }catch(e){ fail() }
+  }
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(done, fallback);
+  } else fallback();
+}
+function downloadFile(name, content, type){
+  try{
+    var blob = new Blob([content], {type:type});
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = name;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(function(){ URL.revokeObjectURL(a.href) }, 1000);
+    return true;
+  }catch(e){ return false }
+}
+function today(){ return new Date().toISOString().slice(0,10) }
+
+/* 클릭 */
+document.addEventListener('click', function(e){
+  var stop = e.target.closest('[data-stop]');
+  var el = e.target.closest('[data-a]');
+  if(!el) return;
+  var a = el.getAttribute('data-a'), v = el.getAttribute('data-v');
+  if((a==='closesheet'||a==='closeexport') && stop && el.className!=='x') return;
+
+  switch(a){
+    case 'pinok':
+      var pi = document.getElementById('pinInput');
+      S.pin = pi ? pi.value.trim() : '';
+      try{ localStorage.setItem(PIN_KEY, S.pin) }catch(err){}
+      S.needPin = false; S.gateMsg = ''; render(); sync();
+      break;
+    case 'tab': S.tab=v; S.confirmId=null; S.confirmReset=false; render(); break;
+    case 'add': bump(v, 1); break;
+    case 'sub': bump(v, -1); break;
+    case 'clearcart': S.cart={}; render(); break;
+    case 'checkout': openCheckout(); break;
+    case 'closesheet': S.draft=null; render(); break;
+    case 'pay': S.draft.pay=v; render(); break;
+    case 'voucher': S.draft.voucher=!S.draft.voucher; render(); break;
+    case 'deliv': S.draft.delivery = v==='1'; render(); break;
+    case 'fee': S.draft.shipFee = Number(v); render(); break;
+    case 'staffpick': S.draft.staff = v; render(); break;
+    case 'savesale': commitSale(); break;
+    case 'filter': S.filter=v; render(); break;
+    case 'editsale':
+      var s0 = saleById(v);
+      if(s0){ S.draft = Object.assign({}, s0, {isNew:false}); render() }
+      break;
+    case 'askdel': S.confirmId=v; render(); break;
+    case 'canceldel': S.confirmId=null; render(); break;
+    case 'delsale':
+      var s1 = saleById(v);
+      if(s1){
+        var tomb = {id:s1.id, createdAt:s1.createdAt, deleted:true};
+        S.sales = S.sales.map(function(x){ return x.id===v ? tomb : x });
+        touchSale(tomb);
+      }
+      S.confirmId=null; toast('판매 내역을 삭제했습니다'); break;
+    case 'shiptoggle':
+      var s2 = saleById(v);
+      if(s2){ s2.shipped=!s2.shipped; touchSale(s2); render() }
+      break;
+    case 'copyaddr':
+      var c = saleById(v);
+      if(c) copyText(c.recipient+' / '+c.phone+' / '+c.address+' / '+
+        c.items.map(function(i){return i.name+' '+i.qty+'개'}).join(', '), '주소를 복사했습니다');
+      break;
+    case 'openexport': S.exportOpen=true; render(); break;
+    case 'closeexport': S.exportOpen=false; render(); break;
+    case 'copyexport':
+      var box = document.getElementById('exportBox');
+      if(box){ box.focus(); box.select() }
+      copyText(exportRows().map(function(r){return r.join('\t')}).join('\n'), '복사했습니다. 엑셀에 붙여 넣으세요');
+      break;
+    case 'dlcsv':
+      var csv = '\uFEFF' + exportRows().map(function(r){
+        return r.map(function(cc){ return '"'+String(cc).replace(/"/g,'""')+'"' }).join(',');
+      }).join('\r\n');
+      var okc = downloadFile('pedident-'+today()+'.csv', csv, 'text/csv;charset=utf-8');
+      var m = document.getElementById('exportMsg');
+      if(m) m.textContent = okc ? '파일을 내려받았습니다.' : '파일 저장이 막혀 있습니다. 표 복사를 써 주세요.';
+      break;
+    case 'prodvoucher':
+      var p1 = productById(v); if(p1){ p1.voucherOnly=!p1.voucherOnly; touchConfig(); render() } break;
+    case 'delprod':
+      S.products = S.products.filter(function(x){return x.id!==v});
+      delete S.cart[v]; touchConfig(); render(); break;
+    case 'addprod':
+      S.products.push({id:uid(), name:'새 품목', sub:'', list:0, price:0,
+        bundleQty:null, bundlePrice:null, stock:null, voucherOnly:false});
+      touchConfig(); render(); break;
+    case 'synknow': sync().then(function(){ toast(S.online?'동기화했습니다':'연결되지 않습니다') }); break;
+    case 'backup':
+      var okb = downloadFile('pedident-backup-'+today()+'.json',
+        JSON.stringify(localSnapshot(), null, 2), 'application/json');
+      toast(okb ? '백업 파일을 저장했습니다' : '파일 저장이 막혀 있습니다');
+      break;
+    case 'askreset': S.confirmReset=true; render(); break;
+    case 'cancelreset': S.confirmReset=false; render(); break;
+    case 'doreset':
+      S.sales = S.sales.map(function(x){
+        if(x.deleted) return x;
+        var t = {id:x.id, createdAt:x.createdAt, deleted:true, updatedAt:Date.now(), _dirty:true};
+        return t;
+      });
+      S.confirmReset=false; saveLocal(); scheduleSync(); toast('판매 내역을 모두 비웠습니다'); break;
+  }
+});
+
+/* 입력 (다시 그리지 않아 커서가 유지됨) */
+document.addEventListener('input', function(e){
+  var el = e.target.closest('[data-i]');
+  if(!el) return;
+  var kind = el.getAttribute('data-i');
+  var k = el.getAttribute('data-k');
+  var raw = el.value;
+  var val = raw;
+  if(el.getAttribute('data-num')){
+    val = (raw==='' && el.getAttribute('data-null')) ? null : (Number(raw)||0);
+  }
+  if(kind==='draft'){
+    S.draft[k] = val;
+    var ft = document.getElementById('footTotal');
+    if(ft) ft.textContent = won(draftTotal(S.draft));
+  } else if(kind==='prod'){
+    var p = productById(el.getAttribute('data-id'));
+    if(p){ p[k]=val; touchConfig() }
+  } else if(kind==='staff'){
+    S.staff[Number(k)] = val; touchConfig();
+  } else if(kind==='track'){
+    var s = saleById(el.getAttribute('data-id'));
+    if(s){ s.tracking=val; touchSale(s) }
+  }
+});
+
+/* 주기적 동기화 */
+setInterval(function(){ if(!document.hidden) sync() }, 6000);
+document.addEventListener('visibilitychange', function(){ if(!document.hidden) sync() });
+window.addEventListener('online', function(){ sync() });
+window.addEventListener('beforeunload', function(){ saveLocal() });
+
+/* 시작 */
+try{ S.pin = localStorage.getItem(PIN_KEY) || '' }catch(e){}
+loadLocal();
+render();
+sync();
+</script>
+</body>
+</html>
